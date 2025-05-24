@@ -1,7 +1,5 @@
-# Tauri + Preact + Typescript
+# Simple PDF Combiner
 
-This template should help get you started developing with Tauri, Preact and Typescript in Vite.
+A simple PDF combiner using Tauri (react frontend)
 
-## Recommended IDE Setup
-
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+WIP!!
