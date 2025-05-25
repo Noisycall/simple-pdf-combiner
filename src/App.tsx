@@ -1,85 +1,140 @@
-import { useEffect, useState } from "preact/hooks";
-import preactLogo from "./assets/preact.svg";
+import { useState } from "preact/hooks";
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
-import {
-  BaseDirectory,
-  create,
-  readDir,
-  writeFile,
-  writeTextFile,
-} from "@tauri-apps/plugin-fs";
+import { BaseDirectory, create, writeFile } from "@tauri-apps/plugin-fs";
 // when using `"withGlobalTauri": true`, you may use
 // const { exists, BaseDirectory } = window.__TAURI__.fs;
 
 // Check if the `$APPDATA/avatar.png` file exists
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState<File>();
-  const [val, setVal] = useState("");
-  useEffect(async () => {
-    // await mkdir('',{baseDir:BaseDirectory.AppCache});
-    await writeTextFile("./wow.txt", "wow", {
-      baseDir: BaseDirectory.AppCache,
-    });
-    setVal(await readDir("", { baseDir: BaseDirectory.AppCache }));
-  }, []);
-
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+  addEventListener("dragenter", (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+  });
+  addEventListener("dragover", (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+  });
+  addEventListener("drop", (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+  });
+  const [file1, setFile1] = useState<File>();
+  const [file2, setFile2] = useState<File>();
+  const [download, setDownload] = useState<File>();
+  // const [dirContents, setDirContents] = useState<DirEntry[]>();
+  // useEffect(() => {
+  //   (async () => {
+  //     await writeTextFile("./wow.txt", "wow", {
+  //       baseDir: BaseDirectory.AppCache,
+  //     });
+  //     setDirContents(await readDir("", { baseDir: BaseDirectory.AppCache }));
+  //   })();
+  // }, []);
 
   return (
     <main class="container">
-      <h1>Welcome to Tauri + Preact</h1>
-
-      <div class="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" class="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" class="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://preactjs.com" target="_blank">
-          <img src={preactLogo} class="logo preact" alt="Preact logo" />
-        </a>
-        <div>Val is {JSON.stringify(val)}</div>
-      </div>
-      <p>Click on the Tauri, Vite, and Preact logos to learn more.</p>
-      <form
-        class="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        {/*<input*/}
-        {/*  id="greet-input"*/}
-        {/*  onInput={(e) => setName(e.currentTarget.value)}*/}
-        {/*  placeholder="Enter a name..."*/}
-
-        {/*/>*/}
-
-        <input
-          type="file"
-          onChange={async (evt) => {
-            console.log(evt.currentTarget.files![0]);
-            let val = evt.currentTarget.files![0];
+      <form class="row">
+        <div
+          id={"dragbox1"}
+          onDragEnter={(evt) => {
+            evt.preventDefault();
+          }}
+          onDragOver={(evt) => {
+            evt.preventDefault();
+          }}
+          onDrop={async (evt) => {
+            console.log("dropped");
+            const dt = evt.dataTransfer;
+            console.log(dt?.files[0]);
+            setFile1(dt?.files[0]);
+            let val = dt!.files[0];
             let file = await create(val.name, {
               baseDir: BaseDirectory.AppCache,
             });
             await file.close();
-            await writeFile(val.name, val.stream(), {
+            let blobed = new Uint8Array(await val.arrayBuffer());
+            await writeFile(val.name, blobed, {
               baseDir: BaseDirectory.AppCache,
             });
           }}
-          accept="application/pdf"
-        />
-        <button type="submit">Greet</button>
+          style={{
+            width: "100px",
+            height: "100px",
+            background: "red",
+            margin: "10px",
+            border: "dashed black 5px",
+          }}
+        >
+          {file1?.name}
+        </div>
+        <div
+          id={"dragbox2"}
+          onDragEnter={(evt) => {
+            evt.stopPropagation();
+            evt.preventDefault();
+          }}
+          onDragExit={(evt) => {
+            evt.stopPropagation();
+            evt.preventDefault();
+          }}
+          onDrop={async (evt) => {
+            evt.stopPropagation();
+            evt.preventDefault();
+            const dt = evt.dataTransfer;
+            setFile2(dt?.files[0]);
+            let val = dt!.files[0];
+            let file = await create(val.name, {
+              baseDir: BaseDirectory.AppCache,
+            });
+            await file.close();
+            let blobed = new Uint8Array(await val.arrayBuffer());
+            await writeFile(val.name, blobed, {
+              baseDir: BaseDirectory.AppCache,
+            });
+          }}
+          style={{
+            width: "100px",
+            height: "100px",
+            background: "red",
+            margin: "10px",
+            border: "dashed black 5px",
+          }}
+        >
+          {file2?.name}
+        </div>
+
+        <button
+          onClick={async (evt) => {
+            evt.preventDefault();
+            let result: ArrayBuffer = await invoke("combine_pdf", {
+              file1: file1?.name,
+              file2: file2?.name,
+            });
+            let resFile = new File([result], "merged.pdf", {
+              type: "application/pdf",
+            });
+            setDownload(resFile);
+            console.info("result", result);
+          }}
+        >
+          Merge
+        </button>
       </form>
-      <p>{name}</p>
+      {download
+        ? (() => {
+            console.log("rendering");
+            return (
+              <a
+                download={download.name}
+                href={URL.createObjectURL(download as Blob)}
+              >
+                Wowowow
+              </a>
+            );
+          })()
+        : ""}
     </main>
   );
 }

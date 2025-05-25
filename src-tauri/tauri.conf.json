@@ -10,9 +10,9 @@
     "frontendDist": "../dist"
   },
   "app": {
-
     "windows": [
       {
+        "dragDropEnabled": false,
         "title": "pdf-combiner",
         "width": 800,
         "height": 600
