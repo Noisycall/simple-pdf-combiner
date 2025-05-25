@@ -2,6 +2,8 @@ import { useState } from "preact/hooks";
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 import { BaseDirectory, create, writeFile } from "@tauri-apps/plugin-fs";
+import { save } from "@tauri-apps/plugin-dialog";
+import { downloadDir } from "@tauri-apps/api/path";
 // when using `"withGlobalTauri": true`, you may use
 // const { exists, BaseDirectory } = window.__TAURI__.fs;
 
@@ -22,16 +24,6 @@ function App() {
   });
   const [file1, setFile1] = useState<File>();
   const [file2, setFile2] = useState<File>();
-  const [download, setDownload] = useState<File>();
-  // const [dirContents, setDirContents] = useState<DirEntry[]>();
-  // useEffect(() => {
-  //   (async () => {
-  //     await writeTextFile("./wow.txt", "wow", {
-  //       baseDir: BaseDirectory.AppCache,
-  //     });
-  //     setDirContents(await readDir("", { baseDir: BaseDirectory.AppCache }));
-  //   })();
-  // }, []);
 
   return (
     <main class="container">
@@ -112,29 +104,19 @@ function App() {
               file1: file1?.name,
               file2: file2?.name,
             });
-            let resFile = new File([result], "merged.pdf", {
-              type: "application/pdf",
-            });
-            setDownload(resFile);
             console.info("result", result);
+
+            let filePath = await save({
+              defaultPath: (await downloadDir()) + "/merged.pdf",
+            });
+            if (filePath) {
+              await writeFile(filePath, new Uint8Array(result));
+            }
           }}
         >
           Merge
         </button>
       </form>
-      {download
-        ? (() => {
-            console.log("rendering");
-            return (
-              <a
-                download={download.name}
-                href={URL.createObjectURL(download as Blob)}
-              >
-                Wowowow
-              </a>
-            );
-          })()
-        : ""}
     </main>
   );
 }

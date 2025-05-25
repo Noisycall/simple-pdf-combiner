@@ -11,6 +11,7 @@
     "fs:default",
     "fs:allow-appcache-read-recursive",
     "fs:allow-appcache-write-recursive",
-    "fs:allow-appcache-meta-recursive"
+    "fs:allow-appcache-meta-recursive",
+    "dialog:default"
   ]
 }
