@@ -2,4 +2,6 @@
 
 A simple PDF combiner using Tauri (react frontend)
 
-WIP!!
+A terrible UI, but functionality working (extremely basic).
+
+Done
